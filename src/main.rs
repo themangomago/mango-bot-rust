@@ -48,21 +48,6 @@ impl EventHandler for Event {
     }
 
     async fn message(&self, _: Context, msg: Message) {}
-
-    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
-        // let ctx = Arc::new(ctx);
-        // if !self.is_loop_running.load(Ordering::Relaxed) {
-        //     let ctx1 = Arc::clone(&ctx);
-        //     tokio::spawn(async move {
-        //         loop {
-        //             dummy(Arc::clone(&ctx1)).await;
-        //             tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-        //         }
-        //     });
-        //     self.is_loop_running.store(true, Ordering::Relaxed);
-        //     println!("Loop started!");
-        // }
-    }
 }
 
 async fn dummy(ctx: Arc<Context>) {
