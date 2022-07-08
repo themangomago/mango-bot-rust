@@ -1,5 +1,8 @@
 struct DatabaseEntry {
     url: String,
+    commit_hash: String,
 }
 
-struct Database {}
+struct Database {
+    entries: HashSet<DatabaseEntry>,
+}

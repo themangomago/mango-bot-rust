@@ -8,3 +8,10 @@ Features:
 - [ ] Add game jam note taking system
 - [ ] Display game jam notes
 - [ ] Clear game jam notes
+
+
+
+Methods to get latest commit:
+- Github webhooks
+- Git clone repo
+- Git remote ?
