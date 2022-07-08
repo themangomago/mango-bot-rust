@@ -15,9 +15,9 @@ use serenity::framework::standard::StandardFramework;
 use serenity::http::Http;
 use serenity::model::channel::Message;
 use serenity::model::gateway::{GatewayIntents, Ready};
-use serenity::model::id::GuildId;
 use serenity::prelude::*;
 
+pub mod database;
 pub mod discord;
 
 struct Config {
@@ -100,6 +100,8 @@ async fn main() {
         .framework(framework)
         .await
         .expect("Error creating client");
+
+    let mut db = database::Database::new();
 
     if let Err(why) = client.start_autosharded().await {
         println!("Error starting client: {:?}", why);

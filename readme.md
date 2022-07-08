@@ -15,3 +15,18 @@ Methods to get latest commit:
 - Github webhooks
 - Git clone repo
 - Git remote ?
+
+<!-- fn perform_git_clone(url: &str) {
+    let _ = std::fs::remove_dir_all("temp");
+
+    let _ = Command::new("git")
+        .arg("clone")
+        .arg("--depth=1")
+        .arg("-n")
+        .arg(url)
+        .arg("temp")
+        .output();
+
+    let output = Command::new("git").arg("log").current_dir("temp").output();
+    println!("{:?}", output);
+} -->
