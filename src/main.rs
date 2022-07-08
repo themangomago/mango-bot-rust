@@ -2,6 +2,8 @@ extern crate dotenv;
 
 use std::collections::HashSet;
 use std::env;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use crate::discord::{commands::*, framework::*, help::*};
 
@@ -11,7 +13,9 @@ use serenity::async_trait;
 use serenity::framework::standard::macros::group;
 use serenity::framework::standard::StandardFramework;
 use serenity::http::Http;
+use serenity::model::channel::Message;
 use serenity::model::gateway::{GatewayIntents, Ready};
+use serenity::model::id::GuildId;
 use serenity::prelude::*;
 
 pub mod discord;
@@ -20,13 +24,49 @@ struct Config {
     pub client_token: String,
 }
 
-struct Event;
+struct Event {
+    is_loop_running: AtomicBool,
+}
 
 #[async_trait]
 impl EventHandler for Event {
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+
+        let ctx = Arc::new(ctx);
+        if !self.is_loop_running.load(Ordering::Relaxed) {
+            let ctx1 = Arc::clone(&ctx);
+            tokio::spawn(async move {
+                loop {
+                    dummy(Arc::clone(&ctx1)).await;
+                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                }
+            });
+            self.is_loop_running.store(true, Ordering::Relaxed);
+            println!("Loop started!");
+        }
     }
+
+    async fn message(&self, _: Context, msg: Message) {}
+
+    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
+        // let ctx = Arc::new(ctx);
+        // if !self.is_loop_running.load(Ordering::Relaxed) {
+        //     let ctx1 = Arc::clone(&ctx);
+        //     tokio::spawn(async move {
+        //         loop {
+        //             dummy(Arc::clone(&ctx1)).await;
+        //             tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        //         }
+        //     });
+        //     self.is_loop_running.store(true, Ordering::Relaxed);
+        //     println!("Loop started!");
+        // }
+    }
+}
+
+async fn dummy(ctx: Arc<Context>) {
+    println!("Alive!")
 }
 
 #[group]
@@ -69,12 +109,14 @@ async fn main() {
         .group(&GENERAL_GROUP);
 
     let mut client = serenity::Client::builder(&config.client_token, intents)
-        .event_handler(Event)
+        .event_handler(Event {
+            is_loop_running: AtomicBool::new(false),
+        })
         .framework(framework)
         .await
         .expect("Error creating client");
 
-    if let Err(why) = client.start().await {
+    if let Err(why) = client.start_autosharded().await {
         println!("Error starting client: {:?}", why);
     }
 }
