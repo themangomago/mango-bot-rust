@@ -9,13 +9,7 @@ use crate::data::cache::*;
 #[description = "Ping? Pong!"]
 #[only_in(guilds)]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    let data = ctx.data.read().await;
-
-    let db = data
-        .get::<DatabaseManager>()
-        .expect("Expected DatabaseManager in TypeMap.")
-        .clone();
-    println!("{:?}", db.lock().await.list());
+    //println!("{}", msg.channel_id);
 
     msg.channel_id.say(&ctx.http, "Pong!").await?;
 
@@ -37,7 +31,7 @@ async fn add_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         .expect("Expected DatabaseManager in TypeMap.")
         .clone();
 
-    let hash = match db.lock().await.add_new(&repo) {
+    let hash = match db.lock().await.add_new(&repo, msg.channel_id.0) {
         Ok(hash) => msg.channel_id.say(&ctx.http, string).await?,
         Err(e) => {
             msg.channel_id
@@ -69,7 +63,7 @@ async fn list_repos(ctx: &Context, msg: &Message) -> CommandResult {
         .get::<DatabaseManager>()
         .expect("Expected DatabaseManager in TypeMap.")
         .clone();
-    let repos = db.lock().await.list();
+    let repos = db.lock().await.list(msg.channel_id.0);
 
     // unroll repos and store in string
     let mut string = String::new();

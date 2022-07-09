@@ -2,9 +2,10 @@
 
 Features:
 - [x] Ping? Pong!
-- [ ] Add repo to watchlist
+- [x] Add repo to watchlist
 - [ ] Scan watchlist for new commits, emit event when found
 - [ ] Delete watchlist entry
+- [ ] Store / load watchlist in json file
 - [ ] Add game jam note taking system
 - [ ] Display game jam notes
 - [ ] Clear game jam notes
