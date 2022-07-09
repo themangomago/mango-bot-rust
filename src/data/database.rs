@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-#[path = "./git.rs"]
+#[path = "../git/git.rs"]
 mod git;
 
 #[derive(Eq, Hash, PartialEq)]
@@ -8,6 +8,7 @@ struct DatabaseEntry {
     url: String,
     commit_hash: String,
 }
+
 pub struct Database {
     entries: HashSet<DatabaseEntry>,
 }
@@ -33,6 +34,13 @@ impl Database {
             url: url.to_string(),
             commit_hash: "".to_string(),
         });
+    }
+
+    pub fn list(&self) -> Vec<String> {
+        self.entries
+            .iter()
+            .map(|entry| format!("{} {}", entry.url, entry.commit_hash))
+            .collect()
     }
 
     // Check if a repo had recent updates.

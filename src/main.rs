@@ -1,23 +1,23 @@
 extern crate dotenv;
 
-use std::collections::HashSet;
-use std::env;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-
-use crate::discord::{commands::*, framework::*, help::*};
-
 use dotenv::dotenv;
-
 use serenity::async_trait;
 use serenity::framework::standard::macros::group;
 use serenity::framework::standard::StandardFramework;
 use serenity::http::Http;
 use serenity::model::channel::Message;
 use serenity::model::gateway::{GatewayIntents, Ready};
+use std::collections::HashSet;
+use std::env;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Once};
+
 use serenity::prelude::*;
 
-pub mod database;
+use data::cache::*;
+use discord::{commands::*, framework::*, help::*};
+
+pub mod data;
 pub mod discord;
 
 struct Config {
@@ -39,7 +39,7 @@ impl EventHandler for Event {
             tokio::spawn(async move {
                 loop {
                     dummy(Arc::clone(&ctx1)).await;
-                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 }
             });
             self.is_loop_running.store(true, Ordering::Relaxed);
@@ -51,16 +51,21 @@ impl EventHandler for Event {
 }
 
 async fn dummy(ctx: Arc<Context>) {
-    println!("Alive!")
+    println!(".")
 }
 
 #[group]
-#[commands(ping, add_repo)]
+#[commands(ping, add_repo, del_repo, list_repos)]
 struct General;
 
 #[tokio::main]
 async fn main() {
     let config = parse_dotenv_file();
+
+    let mut db = data::Database::new();
+    db.add("https://github.com/Elinvynia/bot.git", "0xff");
+    println!("{:?}", db.list());
+
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MESSAGE_REACTIONS
         | GatewayIntents::DIRECT_MESSAGES
@@ -101,8 +106,11 @@ async fn main() {
         .await
         .expect("Error creating client");
 
-    let mut db = database::Database::new();
-
+    {
+        let mut data = client.data.write().await;
+        data.insert::<BotId>(bot_id);
+        data.insert::<DatabaseManager>(Arc::new(db));
+    }
     if let Err(why) = client.start_autosharded().await {
         println!("Error starting client: {:?}", why);
     }
@@ -113,3 +121,46 @@ fn parse_dotenv_file() -> Config {
     let client_token = env::var("CLIENT_TOKEN").unwrap();
     Config { client_token }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Playground
+///////////////////////////////////////////////////////////////////////////////
+// // Unsafe Static Mut Variant
+// static mut counter_value: u64 = 0;
+// static mut counter_started: bool = false;
+// static mut channel_id: ChannelId = ChannelId(0);
+
+// async fn playground(ctx: Arc<Context>) {
+//     unsafe {
+//         if counter_started {
+//             counter_value += 1;
+//             println!("Counter: {}", counter_value);
+//             channel_id
+//                 .say(&ctx.http, &format!("Counter: {}", counter_value))
+//                 .await
+//                 .unwrap();
+//         }
+//     }
+// }
+
+// #[command]
+// #[only_in(guilds)]
+// async fn count(ctx: &Context, msg: &Message) -> CommandResult {
+//     unsafe {
+//         counter_started = true;
+//         channel_id = msg.channel_id;
+//     }
+
+//     Ok(())
+// }
+
+// #[command]
+// #[only_in(guilds)]
+// async fn stop_count(ctx: &Context, msg: &Message) -> CommandResult {
+//     unsafe {
+//         counter_started = false;
+//         channel_id = ChannelId(0);
+//     }
+//     Ok(())
+// }
+///////////////////////////////////////////////////////////////////////////////
