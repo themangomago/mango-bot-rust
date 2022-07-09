@@ -20,12 +20,20 @@ impl Database {
         }
     }
 
-    // Add a new repo to the database.
+    // Add a repo to the database.
     pub fn add(&mut self, url: &str, commit_hash: &str) {
         self.entries.insert(DatabaseEntry {
             url: url.to_string(),
             commit_hash: commit_hash.to_string(),
         });
+    }
+
+    // Adds a new repo to the database.
+    pub fn add_new(&mut self, url: &str) -> Result<String, String> {
+        let commit_hash = git::get_latest_commit_hash(url);
+        //TODO: error on no commit hash found
+        self.add(url, &commit_hash);
+        Ok(commit_hash)
     }
 
     // remove a repo from the database.

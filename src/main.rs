@@ -51,6 +51,13 @@ impl EventHandler for Event {
 }
 
 async fn dummy(ctx: Arc<Context>) {
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<DatabaseManager>()
+        .expect("Expected DatabaseManager in TypeMap.")
+        .clone();
+
+    //println!("{:?}", db.lock().await.list());
     println!(".")
 }
 
@@ -63,8 +70,7 @@ async fn main() {
     let config = parse_dotenv_file();
 
     let mut db = data::Database::new();
-    db.add("https://github.com/Elinvynia/bot.git", "0xff");
-    println!("{:?}", db.list());
+    db.add_new("https://github.com/themangomago/mango-bot-rust");
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MESSAGE_REACTIONS
@@ -109,7 +115,7 @@ async fn main() {
     {
         let mut data = client.data.write().await;
         data.insert::<BotId>(bot_id);
-        data.insert::<DatabaseManager>(Arc::new(db));
+        data.insert::<DatabaseManager>(Arc::new(Mutex::new(db)));
     }
     if let Err(why) = client.start_autosharded().await {
         println!("Error starting client: {:?}", why);

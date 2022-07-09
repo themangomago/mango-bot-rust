@@ -15,5 +15,5 @@ impl TypeMapKey for BotId {
 
 pub struct DatabaseManager;
 impl TypeMapKey for DatabaseManager {
-    type Value = Arc<Database>;
+    type Value = Arc<Mutex<Database>>;
 }

@@ -10,17 +10,12 @@ use crate::data::cache::*;
 #[only_in(guilds)]
 async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read().await;
-    let bot_id = data
-        .get::<BotId>()
-        .expect("Expected CommandCounter in TypeMap.")
-        .clone();
-    println!("{:?}", bot_id);
 
     let db = data
         .get::<DatabaseManager>()
         .expect("Expected DatabaseManager in TypeMap.")
         .clone();
-    println!("{:?}", db.list());
+    println!("{:?}", db.lock().await.list());
 
     msg.channel_id.say(&ctx.http, "Pong!").await?;
 
@@ -33,7 +28,24 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 #[owners_only]
 #[only_in(guilds)]
 async fn add_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "add_repo").await?;
+    let repo = args.parse::<String>().unwrap();
+    let string = format!("Added repo {}", repo);
+
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<DatabaseManager>()
+        .expect("Expected DatabaseManager in TypeMap.")
+        .clone();
+
+    let hash = match db.lock().await.add_new(&repo) {
+        Ok(hash) => msg.channel_id.say(&ctx.http, string).await?,
+        Err(e) => {
+            msg.channel_id
+                .say(&ctx.http, "Error: Couldn't add repository.")
+                .await?
+        }
+    };
+
     Ok(())
 }
 
@@ -51,6 +63,21 @@ async fn del_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[description = "List git repositories from watchlist"]
 #[only_in(guilds)]
 async fn list_repos(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "list_repos").await?;
+    let data = ctx.data.read().await;
+
+    let db = data
+        .get::<DatabaseManager>()
+        .expect("Expected DatabaseManager in TypeMap.")
+        .clone();
+    let repos = db.lock().await.list();
+
+    // unroll repos and store in string
+    let mut string = String::new();
+    string.push_str("Repositories:\n");
+    for repo in repos {
+        string.push_str(&format!("{}\n", repo));
+    }
+
+    msg.channel_id.say(&ctx.http, string).await?;
     Ok(())
 }
