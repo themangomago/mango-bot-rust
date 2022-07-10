@@ -38,7 +38,7 @@ impl EventHandler for Event {
             let ctx1 = Arc::clone(&ctx);
             tokio::spawn(async move {
                 loop {
-                    dummy(Arc::clone(&ctx1)).await;
+                    check_for_git_updates(Arc::clone(&ctx1)).await;
                     tokio::time::sleep(std::time::Duration::from_secs(15)).await;
                 }
             });
@@ -52,7 +52,7 @@ impl EventHandler for Event {
 
 use serenity::model::prelude::ChannelId;
 
-async fn dummy(ctx: Arc<Context>) {
+async fn check_for_git_updates(ctx: Arc<Context>) {
     let data = ctx.data.read().await;
     let db = data
         .get::<DatabaseManager>()
@@ -71,7 +71,7 @@ async fn dummy(ctx: Arc<Context>) {
     // let _ = channel_id.say(&ctx.http, "Hello world!").await;
 
     //println!("{:?}", db.lock().await.list());
-    println!(".")
+    //println!(".")
 }
 
 #[group]

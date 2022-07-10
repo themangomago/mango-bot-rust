@@ -72,6 +72,7 @@ impl Database {
             }
         }
 
+        println!("Check for updates: {}", self.entries.len());
         for entry in self.entries.iter() {
             println!("db -> {} {}", entry.url, entry.commit_hash);
         }
