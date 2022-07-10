@@ -39,7 +39,7 @@ impl EventHandler for Event {
             tokio::spawn(async move {
                 loop {
                     dummy(Arc::clone(&ctx1)).await;
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
                 }
             });
             self.is_loop_running.store(true, Ordering::Relaxed);
@@ -59,6 +59,16 @@ async fn dummy(ctx: Arc<Context>) {
         .expect("Expected DatabaseManager in TypeMap.")
         .clone();
 
+    let changes: Vec<data::database::DatabaseEntry> = db.lock().await.check_for_updates();
+    for entry in changes {
+        let channel = ChannelId(entry.channel_id);
+
+        let string = format!(
+            "New commit found: {}/commit/{}",
+            entry.url, entry.commit_hash
+        );
+        channel.say(&ctx.http, string).await.unwrap();
+    }
     // send message to channel
     //let channel_id = ChannelId(823615033710870568);
     // let _ = channel_id.say(&ctx.http, "Hello world!").await;
@@ -76,10 +86,11 @@ async fn main() {
     let config = parse_dotenv_file();
 
     let mut db = data::Database::new();
-    db.add_new(
+    let last_hash = db.add_new(
         "https://github.com/themangomago/mango-bot-rust",
         823615033710870568,
     );
+    println!("{:?}", last_hash);
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MESSAGE_REACTIONS
