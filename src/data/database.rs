@@ -83,6 +83,10 @@ impl Database {
             self.add(&entry.url, &entry.commit_hash, entry.channel_id);
         }
 
+        for entry in self.entries.iter() {
+            println!("{} {}", entry.url, entry.commit_hash);
+        }
+
         return return_values;
     }
 }

@@ -63,10 +63,7 @@ async fn dummy(ctx: Arc<Context>) {
     for entry in changes {
         let channel = ChannelId(entry.channel_id);
 
-        let string = format!(
-            "New commit found: {}/commit/{}",
-            entry.url, entry.commit_hash
-        );
+        let string = format!("New commit: {}/commit/{}", entry.url, entry.commit_hash);
         channel.say(&ctx.http, string).await.unwrap();
     }
     // send message to channel
