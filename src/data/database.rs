@@ -3,7 +3,7 @@ use std::collections::HashSet;
 #[path = "../git/git.rs"]
 mod git;
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub struct DatabaseEntry {
     pub url: String,
     pub commit_hash: String,
@@ -11,22 +11,23 @@ pub struct DatabaseEntry {
 }
 
 pub struct Database {
-    entries: HashSet<DatabaseEntry>,
+    entries: Vec<DatabaseEntry>,
 }
 
 impl Database {
     pub fn new() -> Database {
         Database {
-            entries: HashSet::new(),
+            entries: Vec::new(),
         }
     }
 
     // Add a repo to the database.
     pub fn add(&mut self, url: &str, commit_hash: &str, channel_id: u64) {
-        self.entries.insert(DatabaseEntry {
+        // inset data into entries
+        self.entries.push(DatabaseEntry {
             url: url.to_string(),
             commit_hash: commit_hash.to_string(),
-            channel_id: channel_id,
+            channel_id,
         });
     }
 
@@ -39,12 +40,15 @@ impl Database {
     }
 
     // remove a repo from the database.
-    pub fn remove(&mut self, url: &str) {
-        self.entries.remove(&DatabaseEntry {
-            url: url.to_string(),
-            commit_hash: "".to_string(),
-            channel_id: 0,
-        });
+    pub fn remove(&mut self, url: &str) -> Result<(), ()> {
+        // remove entry from entries where url == url
+        let size = self.entries.len();
+        self.entries.retain(|entry| entry.url != url);
+        if size > self.entries.len() {
+            Ok(())
+        } else {
+            Err(())
+        }
     }
 
     pub fn list(&self, channel_id: u64) -> Vec<String> {
@@ -57,34 +61,19 @@ impl Database {
 
     // Check if a repo had recent updates.
     pub fn check_for_updates(&mut self) -> Vec<DatabaseEntry> {
-        let mut update_entries: HashSet<DatabaseEntry> = HashSet::new();
         let mut return_values: Vec<DatabaseEntry> = Vec::new();
 
-        for entry in self.entries.iter() {
+        // Loop over entries, check for updates and update commit_hash if needed.
+        for entry in &mut self.entries {
             let commit_hash = git::get_latest_commit_hash(&entry.url);
             if commit_hash != entry.commit_hash {
-                println!("{} has been updated!", entry.url);
-                update_entries.insert(DatabaseEntry {
-                    url: entry.url.clone(),
-                    commit_hash: commit_hash,
-                    channel_id: entry.channel_id,
-                });
+                entry.commit_hash = commit_hash;
+                return_values.push(entry.clone());
             }
         }
 
-        for entry in update_entries.iter() {
-            let copy: DatabaseEntry = DatabaseEntry {
-                url: entry.url.clone(),
-                commit_hash: entry.commit_hash.clone(),
-                channel_id: entry.channel_id,
-            };
-            return_values.push(copy);
-            self.entries.remove(entry);
-            self.add(&entry.url, &entry.commit_hash, entry.channel_id);
-        }
-
         for entry in self.entries.iter() {
-            println!("{} {}", entry.url, entry.commit_hash);
+            println!("db -> {} {}", entry.url, entry.commit_hash);
         }
 
         return return_values;

@@ -49,7 +49,20 @@ async fn add_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[owners_only]
 #[only_in(guilds)]
 async fn del_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "del_repo").await?;
+    let repo = args.parse::<String>().unwrap();
+    let data = ctx.data.read().await;
+    let db = data
+        .get::<DatabaseManager>()
+        .expect("Expected DatabaseManager in TypeMap.")
+        .clone();
+    match db.lock().await.remove(&repo) {
+        Ok(_) => msg.channel_id.say(&ctx.http, "Repository removed.").await?,
+        Err(_) => {
+            msg.channel_id
+                .say(&ctx.http, "Error: Couldn't find repository.")
+                .await?
+        }
+    };
     Ok(())
 }
 
@@ -67,7 +80,10 @@ async fn list_repos(ctx: &Context, msg: &Message) -> CommandResult {
 
     // unroll repos and store in string
     let mut string = String::new();
-    string.push_str("Repositories:\n");
+    string.push_str("\nWatch List:\n");
+    if repos.len() == 0 {
+        string.push_str("No repository has been added.");
+    }
     for repo in repos {
         string.push_str(&format!("{}\n", repo));
     }
