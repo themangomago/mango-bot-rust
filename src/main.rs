@@ -22,6 +22,7 @@ pub mod discord;
 
 struct Config {
     pub client_token: String,
+    pub client_prefix: String,
 }
 
 struct Event {
@@ -115,7 +116,11 @@ async fn main() {
     };
 
     let framework = StandardFramework::new()
-        .configure(|c| c.owners(owners).prefix("!").on_mention(Some(bot_id)))
+        .configure(|c| {
+            c.owners(owners)
+                .prefix(config.client_prefix)
+                .on_mention(Some(bot_id))
+        })
         .on_dispatch_error(dispatch_error)
         .before(before)
         .after(after)
@@ -143,7 +148,11 @@ async fn main() {
 fn parse_dotenv_file() -> Config {
     dotenv().ok().expect("Error loading .env file");
     let client_token = env::var("CLIENT_TOKEN").unwrap();
-    Config { client_token }
+    let client_prefix = env::var("CLIENT_PREFIX").unwrap();
+    Config {
+        client_token,
+        client_prefix,
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
