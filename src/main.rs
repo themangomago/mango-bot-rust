@@ -83,11 +83,12 @@ async fn main() {
     let config = parse_dotenv_file();
 
     let mut db = data::Database::new();
-    let last_hash = db.add_new(
-        "https://github.com/themangomago/mango-bot-rust",
-        823615033710870568,
-    );
-    println!("{:?}", last_hash);
+    db.load_or_create_db();
+    // let last_hash = db.add_new(
+    //     "https://github.com/themangomago/mango-bot-rust",
+    //     823615033710870568,
+    // );
+    //println!("{:?}", last_hash);
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::GUILD_MESSAGE_REACTIONS

@@ -23,7 +23,7 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
 #[only_in(guilds)]
 async fn add_repo(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let repo = args.parse::<String>().unwrap();
-    let string = format!("Added repo {}", repo);
+    let string = format!("Added repo <{}>", repo);
 
     let data = ctx.data.read().await;
     let db = data

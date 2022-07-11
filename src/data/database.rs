@@ -1,9 +1,15 @@
-use std::collections::HashSet;
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter},
+};
+
+extern crate serde_json;
+use serde::{Deserialize, Serialize};
 
 #[path = "../git/git.rs"]
 mod git;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Serialize, Deserialize)]
 pub struct DatabaseEntry {
     pub url: String,
     pub commit_hash: String,
@@ -18,6 +24,15 @@ impl Database {
     pub fn new() -> Database {
         Database {
             entries: Vec::new(),
+        }
+    }
+
+    pub fn load_or_create_db(&mut self) {
+        let path = "database.json";
+        if !std::path::Path::new(path).exists() {
+            self.save();
+        } else {
+            self.load();
         }
     }
 
@@ -36,6 +51,9 @@ impl Database {
         let commit_hash = git::get_latest_commit_hash(url);
         //TODO: error on no commit hash found
         self.add(url, &commit_hash, channel_id);
+
+        // Save db to file
+        self.save();
         Ok(commit_hash)
     }
 
@@ -45,6 +63,8 @@ impl Database {
         let size = self.entries.len();
         self.entries.retain(|entry| entry.url != url);
         if size > self.entries.len() {
+            // Save db to file
+            self.save();
             Ok(())
         } else {
             Err(())
@@ -72,11 +92,28 @@ impl Database {
             }
         }
 
-        println!("Check for updates: {}", self.entries.len());
-        for entry in self.entries.iter() {
+        if return_values.len() > 0 {
+            // Save db to file
+            self.save();
+        }
+
+        println!("Check for updates: {}", return_values.len());
+        for entry in return_values.iter() {
             println!("db -> {} {}", entry.url, entry.commit_hash);
         }
 
         return return_values;
+    }
+
+    fn save(&self) {
+        let file = File::create("database.json").unwrap();
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(&mut writer, &self.entries).unwrap();
+    }
+
+    fn load(&mut self) {
+        let file = File::open("database.json").unwrap();
+        let mut reader = BufReader::new(file);
+        self.entries = serde_json::from_reader(&mut reader).unwrap();
     }
 }
