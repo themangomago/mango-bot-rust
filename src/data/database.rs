@@ -61,6 +61,8 @@ impl Database {
     pub fn remove(&mut self, url: &str) -> Result<(), ()> {
         // remove entry from entries where url == url
         let size = self.entries.len();
+
+        //TODO: check also channel id - because of duplicate git urls from different channels
         self.entries.retain(|entry| entry.url != url);
         if size > self.entries.len() {
             // Save db to file

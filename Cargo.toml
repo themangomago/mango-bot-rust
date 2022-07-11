@@ -11,3 +11,8 @@ serenity = {version = "0.11.2", default-features = false, features = ["client", 
 tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
 serde_json = {version = "1.0.82"}
 serde = {version = "1.0.82"}
+
+
+[profile.release]
+opt-level = 'z'     # Optimize for size.
+lto = true          # Enable Link Time Optimization
