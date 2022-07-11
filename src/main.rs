@@ -39,7 +39,7 @@ impl EventHandler for Event {
             tokio::spawn(async move {
                 loop {
                     check_for_git_updates(Arc::clone(&ctx1)).await;
-                    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+                    tokio::time::sleep(std::time::Duration::from_secs(20)).await;
                 }
             });
             self.is_loop_running.store(true, Ordering::Relaxed);

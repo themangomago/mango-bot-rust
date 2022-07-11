@@ -95,11 +95,11 @@ impl Database {
         if return_values.len() > 0 {
             // Save db to file
             self.save();
-        }
 
-        println!("Check for updates: {}", return_values.len());
-        for entry in return_values.iter() {
-            println!("db -> {} {}", entry.url, entry.commit_hash);
+            println!("Changes found: {}", return_values.len());
+            for entry in return_values.iter() {
+                println!("db -> {} {}", entry.url, entry.commit_hash);
+            }
         }
 
         return return_values;
