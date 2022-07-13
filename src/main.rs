@@ -5,8 +5,11 @@ use serenity::async_trait;
 use serenity::framework::standard::macros::group;
 use serenity::framework::standard::StandardFramework;
 use serenity::http::Http;
+use serenity::json::Value;
 use serenity::model::channel::Message;
 use serenity::model::gateway::{GatewayIntents, Ready};
+use serenity::model::guild::Member;
+use serenity::model::Timestamp;
 use std::collections::HashSet;
 use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -48,7 +51,47 @@ impl EventHandler for Event {
         }
     }
 
-    async fn message(&self, _: Context, msg: Message) {}
+    async fn unknown(&self, _ctx: Context, name: String, _raw: Value) {
+        println!("Unknown command received: {}", name);
+    }
+
+    // async fn message(&self, ctx: Context, msg: Message) {
+    //     if msg.content == "!hello" {
+    //         // The create message builder allows you to easily create embeds and messages
+    //         // using a builder syntax.
+    //         // This example will create a message that says "Hello, World!", with an embed that has
+    //         // a title, description, an image, three fields, and a footer.
+    //         let msg = msg
+    //             .channel_id
+    //             .send_message(&ctx.http, |m| {
+    //                 m.content("Hello, World!")
+    //                     .embed(|e| {
+    //                         e.title("This is a title")
+    //                             .description("This is a description")
+    //                             .image("attachment://mango.png")
+    //                             .fields(vec![
+    //                                 ("This is the first field", "This is a field body", true),
+    //                                 ("This is the second field", "Both fields are inline", true),
+    //                             ])
+    //                             .field(
+    //                                 "This is the third field",
+    //                                 "This is not an inline field",
+    //                                 false,
+    //                             )
+    //                             .footer(|f| f.text("This is a footer"))
+    //                             // Add a timestamp for the current time
+    //                             // This also accepts a rfc3339 Timestamp
+    //                             .timestamp(Timestamp::now())
+    //                     })
+    //                     .add_file("./images/mango.png")
+    //             })
+    //             .await;
+
+    //         if let Err(why) = msg {
+    //             println!("Error sending message: {:?}", why);
+    //         }
+    //     }
+    // }
 }
 
 use serenity::model::prelude::ChannelId;
@@ -60,7 +103,7 @@ async fn check_for_git_updates(ctx: Arc<Context>) {
         .expect("Expected DatabaseManager in TypeMap.")
         .clone();
 
-    let changes: Vec<data::database::DatabaseEntry> = db.lock().await.check_for_updates();
+    let changes: Vec<data::git_database::GitDatabaseEntry> = db.lock().await.check_for_updates();
     for entry in changes {
         let channel = ChannelId(entry.channel_id);
 
@@ -83,7 +126,7 @@ struct General;
 async fn main() {
     let config = parse_dotenv_file();
 
-    let mut db = data::Database::new();
+    let mut db = data::GitDatabase::new();
     db.load_or_create_db();
     // let last_hash = db.add_new(
     //     "https://github.com/themangomago/mango-bot-rust",

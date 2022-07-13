@@ -1,4 +1,6 @@
 pub mod cache;
 
-pub mod database;
-pub use self::database::Database;
+pub mod server_config;
+
+pub mod git_database;
+pub use self::git_database::GitDatabase;

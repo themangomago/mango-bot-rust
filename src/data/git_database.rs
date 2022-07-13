@@ -10,19 +10,19 @@ use serde::{Deserialize, Serialize};
 mod git;
 
 #[derive(Eq, Hash, PartialEq, Clone, Serialize, Deserialize)]
-pub struct DatabaseEntry {
+pub struct GitDatabaseEntry {
     pub url: String,
     pub commit_hash: String,
     pub channel_id: u64,
 }
 
-pub struct Database {
-    entries: Vec<DatabaseEntry>,
+pub struct GitDatabase {
+    entries: Vec<GitDatabaseEntry>,
 }
 
-impl Database {
-    pub fn new() -> Database {
-        Database {
+impl GitDatabase {
+    pub fn new() -> GitDatabase {
+        GitDatabase {
             entries: Vec::new(),
         }
     }
@@ -39,7 +39,7 @@ impl Database {
     // Add a repo to the database.
     pub fn add(&mut self, url: &str, commit_hash: &str, channel_id: u64) {
         // inset data into entries
-        self.entries.push(DatabaseEntry {
+        self.entries.push(GitDatabaseEntry {
             url: url.to_string(),
             commit_hash: commit_hash.to_string(),
             channel_id,
@@ -82,8 +82,8 @@ impl Database {
     }
 
     // Check if a repo had recent updates.
-    pub fn check_for_updates(&mut self) -> Vec<DatabaseEntry> {
-        let mut return_values: Vec<DatabaseEntry> = Vec::new();
+    pub fn check_for_updates(&mut self) -> Vec<GitDatabaseEntry> {
+        let mut return_values: Vec<GitDatabaseEntry> = Vec::new();
 
         // Loop over entries, check for updates and update commit_hash if needed.
         for entry in &mut self.entries {

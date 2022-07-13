@@ -1,7 +1,7 @@
 use serenity::{client::bridge::gateway::ShardManager, model::prelude::*, prelude::*};
 use std::{collections::HashMap, sync::Arc};
 
-use super::Database;
+use super::GitDatabase;
 
 pub struct BotOwners;
 impl TypeMapKey for BotOwners {
@@ -15,5 +15,5 @@ impl TypeMapKey for BotId {
 
 pub struct DatabaseManager;
 impl TypeMapKey for DatabaseManager {
-    type Value = Arc<Mutex<Database>>;
+    type Value = Arc<Mutex<GitDatabase>>;
 }
