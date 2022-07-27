@@ -14,6 +14,7 @@ use std::collections::HashSet;
 use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Once};
+use std::time::SystemTime;
 
 use serenity::prelude::*;
 
@@ -119,7 +120,7 @@ async fn check_for_git_updates(ctx: Arc<Context>) {
 }
 
 #[group]
-#[commands(ping, add_repo, del_repo, list_repos)]
+#[commands(ping, add_repo, del_repo, list_repos, uptime)]
 struct General;
 
 #[tokio::main]
@@ -179,9 +180,14 @@ async fn main() {
         .expect("Error creating client");
 
     {
+        let timestamp = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let mut data = client.data.write().await;
         data.insert::<BotId>(bot_id);
         data.insert::<DatabaseManager>(Arc::new(Mutex::new(db)));
+        data.insert::<Time>(timestamp);
     }
     if let Err(why) = client.start_autosharded().await {
         println!("Error starting client: {:?}", why);

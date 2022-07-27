@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use serenity::framework::standard::macros::command;
 use serenity::framework::standard::{Args, CommandResult};
 use serenity::model::prelude::*;
@@ -12,6 +14,35 @@ async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     //println!("{}", msg.channel_id);
 
     msg.channel_id.say(&ctx.http, "Pong!").await?;
+
+    Ok(())
+}
+
+#[command]
+#[description = "How long has the bot been online?"]
+#[only_in(guilds)]
+async fn uptime(ctx: &Context, msg: &Message) -> CommandResult {
+    //println!("{}", msg.channel_id);
+    let data = ctx.data.read().await;
+    let time_start = data.get::<Time>().unwrap();
+    let time_now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    // Uptime in seconds
+    let uptime = time_now - time_start;
+
+    // Uptime in human readable format
+    let uptime_str = format!(
+        "Uptime: {} days, {} hours, {} minutes, {} seconds",
+        uptime / 86400,
+        (uptime % 86400) / 3600,
+        (uptime % 3600) / 60,
+        uptime % 60
+    );
+
+    msg.channel_id.say(&ctx.http, uptime_str).await?;
 
     Ok(())
 }

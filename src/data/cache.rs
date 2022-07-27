@@ -17,3 +17,8 @@ pub struct DatabaseManager;
 impl TypeMapKey for DatabaseManager {
     type Value = Arc<Mutex<GitDatabase>>;
 }
+
+pub struct Time;
+impl TypeMapKey for Time {
+    type Value = u64;
+}
